@@ -28,16 +28,11 @@ MockServer<C>::MockServer(ConnectCallbackT on_connect, uint32_t sequence_number)
 template <typename C>
 MockServer<C>::~MockServer() {
   std::unique_lock<std::timed_mutex> l(command_mutex_, std::defer_lock);
-  // If we can't get the lock, the thread will still be terminated
-  // by its destructor.
-  if (l.try_lock_for(std::chrono::seconds(1))) {
-    shutdown_ = true;
-    l.unlock();
-    cv_.notify_one();
-    server_thread_.join();
-  } else {
-    std::cerr << "MockServer: Couldn't terminate the server thread properly." << std::endl;
-  }
+  l.lock();
+  shutdown_ = true;
+  l.unlock();
+  cv_.notify_one();
+  server_thread_.join();
 
   if (!commands_.empty()) {
     std::stringstream ss;
