@@ -1,0 +1,64 @@
+name: CMake
+
+on:
+  push:
+    branches: [ "master" ]
+    paths-ignore:
+      - "**/*.md"
+  pull_request:
+    branches: [ "master" ]
+    paths-ignore:
+      - "**/*.md"
+
+env:
+  BUILD_TYPE: Release
+  DEBIAN_FRONTEND: noninteractive
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ubuntu-version:
+          - "22.04"
+          - "24.04"
+          - "26.04"
+    container:
+      image: ubuntu:${{ matrix.ubuntu-version }}
+
+    steps:
+    - name: Install dependencies
+      run: |
+        apt update
+        apt install -y --no-install-recommends \
+          build-essential \
+          cmake \
+          libeigen3-dev \
+          libpoco-dev \
+          libgmock-dev
+
+    - uses: actions/checkout@v6
+
+    - name: Configure
+      run: |
+        cmake \
+          -B $GITHUB_WORKSPACE/build \
+          -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+    - name: Build
+      run: |
+        cmake \
+          --build $GITHUB_WORKSPACE/build \
+          --config ${{env.BUILD_TYPE}} -j
+
+    - name: Install
+      run: |
+        cmake \
+          --install $GITHUB_WORKSPACE/build
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      run: |
+        ctest \
+          -C ${{env.BUILD_TYPE}} \
+          --output-on-failure
