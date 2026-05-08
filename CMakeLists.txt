@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.4)
+cmake_minimum_required(VERSION 3.22)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -11,7 +11,7 @@ project(libfranka
 
 list(INSERT CMAKE_MODULE_PATH 0 "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -20,9 +20,6 @@ if(MSVC)
 else()
   add_compile_options(-Wall -Wextra)
 endif()
-
-set(THIRDPARTY_SOURCES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty" CACHE PATH
-  "Directory for third-party sources")
 
 ## Dependencies
 find_package(Poco REQUIRED COMPONENTS Net Foundation)
@@ -158,8 +155,9 @@ install(EXPORT FrankaTargets
 # Ignore find_package(Franka) in subprojects.
 set(FRANKA_IS_FOUND TRUE)
 
-option(BUILD_TESTS "Build tests" ON)
-if(BUILD_TESTS)
+include(CTest)
+
+if (BUILD_TESTING)
   enable_testing()
   add_subdirectory(test)
 endif()
