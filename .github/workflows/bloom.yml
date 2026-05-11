@@ -1,0 +1,46 @@
+name: bloom
+
+on:
+  push:
+    branches: [ "master" ]
+    paths-ignore:
+      - "**/*.md"
+  pull_request:
+    branches: [ "master" ]
+    paths-ignore:
+      - "**/*.md"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - {distribution: ubuntu,    version: 22.04, ros: humble}
+          - {distribution: ubuntu,    version: 24.04, ros: jazzy}
+          - {distribution: ubuntu,    version: 26.04, ros: lyrical}
+
+    container:
+      image: ${{ matrix.distribution }}:${{ matrix.version }}
+
+    steps:
+    - uses: ros-tooling/setup-ros@v0.7
+
+    - name: install build tool dependencies (ubuntu)
+      if: ${{ matrix.distribution == 'ubuntu' }}
+      run: |
+        apt install -y --no-install-recommends devscripts equivs python3-bloom
+
+    - uses: actions/checkout@v6
+
+    - name: bloom (ubuntu)
+      if: ${{ matrix.distribution == 'ubuntu' }}
+      env:
+        DEB_BUILD_OPTIONS: "nocheck"
+      run: |
+        rosdep update
+        bloom-generate rosdebian --ros-distro ${{ matrix.ros }}
+        mk-build-deps
+        apt install -y --no-install-recommends ./ros-${{ matrix.ros }}-*-build-deps_*_all.deb
+        dpkg-buildpackage -b -uc
+        apt install -y --no-install-recommends ../ros-${{ matrix.ros }}-*_*.deb ../ros-${{ matrix.ros }}-libfranka-dbgsym_*.ddeb
