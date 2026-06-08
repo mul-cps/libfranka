@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 0.9.3 - 2026-06-08
+
+ * update CMake and C++ version
+ * add `package.xml`
+ * add CI pipeline and compatibility for Ubuntu 26.04
+
 ## 0.9.2 - 2022-08-31
 
  * Revert usage of `set_version_from_git` in CMakeLists.txt, using hardcoded values instead
