@@ -49,7 +49,7 @@ template <typename C>
 MockServer<C>& MockServer<C>::onReceiveRobotCommand(
     ReceiveRobotCommandCallbackT on_receive_robot_command) {
   std::lock_guard<std::timed_mutex> _(command_mutex_);
-  commands_.emplace_back("onReceiveRobotCommand", [=](Socket&, Socket& udp_socket) {
+  commands_.emplace_back("onReceiveRobotCommand", [=, this](Socket&, Socket& udp_socket) {
     research_interface::robot::RobotCommand robot_command;
     udp_socket.receiveBytes(&robot_command, sizeof(robot_command));
     if (on_receive_robot_command) {
@@ -191,7 +191,7 @@ MockServer<C>& MockServer<C>::doForever(std::function<bool()> callback) {
 template <typename C>
 MockServer<C>& MockServer<C>::doForever(std::function<bool()> callback,
                                         typename decltype(MockServer::commands_)::iterator it) {
-  auto callback_wrapper = [=](Socket&, Socket&) {
+  auto callback_wrapper = [=, this](Socket&, Socket&) {
     std::unique_lock<std::timed_mutex> lock(command_mutex_);
     if (shutdown_) {
       return;

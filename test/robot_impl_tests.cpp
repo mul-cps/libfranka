@@ -98,7 +98,7 @@ TEST(RobotImpl, CanStartMotion) {
         robot_state.robot_mode = RobotMode::kMove;
       })
       .spinOnce()
-      .waitForCommand<Move>([=](const Move::Request& request) {
+      .waitForCommand<Move>([=, this](const Move::Request& request) {
         EXPECT_EQ(Move::MotionGeneratorMode::kJointPosition, request.motion_generator_mode);
         EXPECT_EQ(Move::ControllerMode::kJointImpedance, request.controller_mode);
         EXPECT_EQ(maximum_path_deviation, request.maximum_path_deviation);
@@ -154,7 +154,7 @@ TEST(RobotImpl, CanStartMotionWithController) {
         robot_state.robot_mode = RobotMode::kMove;
       })
       .spinOnce()
-      .waitForCommand<Move>([=](const Move::Request& request) {
+      .waitForCommand<Move>([=, this](const Move::Request& request) {
         EXPECT_EQ(Move::MotionGeneratorMode::kCartesianPosition, request.motion_generator_mode);
         EXPECT_EQ(Move::ControllerMode::kExternalController, request.controller_mode);
         EXPECT_EQ(maximum_path_deviation, request.maximum_path_deviation);
@@ -199,7 +199,7 @@ TEST(RobotImpl, CanStartExternalControllerMotion) {
         robot_state.robot_mode = RobotMode::kMove;
       })
       .spinOnce()
-      .waitForCommand<Move>([=](const Move::Request& request) {
+      .waitForCommand<Move>([=, this](const Move::Request& request) {
         EXPECT_EQ(Move::MotionGeneratorMode::kJointVelocity, request.motion_generator_mode);
         EXPECT_EQ(Move::ControllerMode::kExternalController, request.controller_mode);
         EXPECT_EQ(maximum_path_deviation, request.maximum_path_deviation);
@@ -275,7 +275,7 @@ TEST(RobotImpl, CanSendMotionGeneratorCommand) {
   Robot::Impl robot(std::make_unique<franka::Network>("127.0.0.1", kCommandPort), 0);
 
   server
-      .onSendUDP<RobotState>([=](RobotState& robot_state) {
+      .onSendUDP<RobotState>([=, this](RobotState& robot_state) {
         robot_state.motion_generator_mode = MotionGeneratorMode::kJointVelocity;
         robot_state.controller_mode = ControllerMode::kJointImpedance;
         robot_state.robot_mode = RobotMode::kMove;
@@ -291,14 +291,14 @@ TEST(RobotImpl, CanSendMotionGeneratorCommand) {
                     maximum_goal_pose_deviation);
 
   server
-      .onSendUDP<RobotState>([=](RobotState& robot_state) {
+      .onSendUDP<RobotState>([=, this](RobotState& robot_state) {
         robot_state.motion_generator_mode = MotionGeneratorMode::kJointVelocity;
         robot_state.controller_mode = ControllerMode::kJointImpedance;
         robot_state.robot_mode = RobotMode::kMove;
         robot_state.message_id = message_id + 1;
       })
       .spinOnce()
-      .onReceiveRobotCommand([=](const RobotCommand& command) {
+      .onReceiveRobotCommand([=, this](const RobotCommand& command) {
         EXPECT_EQ(message_id, command.message_id);
         testMotionGeneratorCommandsAreEqual(sent_command.motion, command.motion);
       })
@@ -321,14 +321,14 @@ TEST(RobotImpl, CanSendControllerCommand) {
   Robot::Impl robot(std::make_unique<franka::Network>("127.0.0.1", kCommandPort), 0);
 
   server
-      .onSendUDP<RobotState>([=](RobotState& robot_state) {
+      .onSendUDP<RobotState>([=, this](RobotState& robot_state) {
         robot_state.motion_generator_mode = MotionGeneratorMode::kJointVelocity;
         robot_state.controller_mode = ControllerMode::kExternalController;
         robot_state.robot_mode = RobotMode::kMove;
         robot_state.message_id = message_id;
       })
       .spinOnce()
-      .waitForCommand<Move>([=](const Move::Request& request) {
+      .waitForCommand<Move>([=, this](const Move::Request& request) {
         EXPECT_EQ(Move::MotionGeneratorMode::kJointVelocity, request.motion_generator_mode);
         EXPECT_EQ(Move::ControllerMode::kExternalController, request.controller_mode);
         EXPECT_EQ(maximum_path_deviation, request.maximum_path_deviation);
@@ -344,14 +344,14 @@ TEST(RobotImpl, CanSendControllerCommand) {
   EXPECT_TRUE(robot.controllerRunning());
 
   server
-      .onSendUDP<RobotState>([=](RobotState& robot_state) {
+      .onSendUDP<RobotState>([=, this](RobotState& robot_state) {
         robot_state.motion_generator_mode = MotionGeneratorMode::kJointVelocity;
         robot_state.controller_mode = ControllerMode::kExternalController;
         robot_state.robot_mode = RobotMode::kMove;
         robot_state.message_id = message_id + 1;
       })
       .spinOnce()
-      .onReceiveRobotCommand([=](const RobotCommand& command) {
+      .onReceiveRobotCommand([=, this](const RobotCommand& command) {
         EXPECT_EQ(message_id, command.message_id);
         testControllerCommandsAreEqual(sent_command.control, command.control);
         testMotionGeneratorCommandsAreEqual(sent_command.motion, command.motion);
@@ -374,7 +374,7 @@ TEST(RobotImpl, CanSendMotionGeneratorAndControlCommand) {
   Robot::Impl robot(std::make_unique<franka::Network>("127.0.0.1", kCommandPort), 0);
 
   server
-      .onSendUDP<RobotState>([=](RobotState& robot_state) {
+      .onSendUDP<RobotState>([=, this](RobotState& robot_state) {
         robot_state.motion_generator_mode = MotionGeneratorMode::kCartesianPosition;
         robot_state.controller_mode = ControllerMode::kExternalController;
         robot_state.robot_mode = RobotMode::kMove;
@@ -390,14 +390,14 @@ TEST(RobotImpl, CanSendMotionGeneratorAndControlCommand) {
                     maximum_goal_pose_deviation);
 
   server
-      .onSendUDP<RobotState>([=](RobotState& robot_state) {
+      .onSendUDP<RobotState>([=, this](RobotState& robot_state) {
         robot_state.motion_generator_mode = MotionGeneratorMode::kCartesianPosition;
         robot_state.controller_mode = ControllerMode::kExternalController;
         robot_state.robot_mode = RobotMode::kMove;
         robot_state.message_id = message_id + 1;
       })
       .spinOnce()
-      .onReceiveRobotCommand([=](const RobotCommand& command) {
+      .onReceiveRobotCommand([=, this](const RobotCommand& command) {
         EXPECT_EQ(message_id, command.message_id);
         testMotionGeneratorCommandsAreEqual(sent_command.motion, command.motion);
         testControllerCommandsAreEqual(sent_command.control, command.control);
@@ -425,7 +425,7 @@ TEST(RobotImpl, CanReceiveMotionRejected) {
     Robot::Impl robot(std::make_unique<franka::Network>("127.0.0.1", kCommandPort), 0);
 
     server
-        .onSendUDP<RobotState>([=](RobotState& robot_state) {
+        .onSendUDP<RobotState>([=, this](RobotState& robot_state) {
           robot_state.motion_generator_mode = MotionGeneratorMode::kIdle;
           robot_state.controller_mode = ControllerMode::kCartesianImpedance;
           robot_state.robot_mode = RobotMode::kMove;
@@ -1031,7 +1031,7 @@ TEST(RobotImpl, ThrowsDuringControlIfErrorReceived) {
 
   uint32_t move_id;
   server
-      .onSendUDP<RobotState>([=](RobotState& robot_state) {
+      .onSendUDP<RobotState>([=, this](RobotState& robot_state) {
         robot_state.motion_generator_mode = MotionGeneratorMode::kJointVelocity;
         robot_state.controller_mode = ControllerMode::kExternalController;
         robot_state.robot_mode = RobotMode::kMove;
@@ -1039,7 +1039,7 @@ TEST(RobotImpl, ThrowsDuringControlIfErrorReceived) {
       })
       .spinOnce()
       .waitForCommand<Move>(
-          [=](const Move::Request& request) {
+          [=, this](const Move::Request& request) {
             EXPECT_EQ(Move::MotionGeneratorMode::kJointVelocity, request.motion_generator_mode);
             EXPECT_EQ(Move::ControllerMode::kExternalController, request.controller_mode);
             EXPECT_EQ(maximum_path_deviation, request.maximum_path_deviation);
@@ -1058,7 +1058,7 @@ TEST(RobotImpl, ThrowsDuringControlIfErrorReceived) {
   MotionGeneratorCommand motion_command{};
   ControllerCommand control_command{};
   server
-      .onSendUDP<RobotState>([=](RobotState& robot_state) {
+      .onSendUDP<RobotState>([=, this](RobotState& robot_state) {
         robot_state.controller_mode = ControllerMode::kJointImpedance;
         robot_state.reflex_reason[0] = true;
         robot_state.robot_mode = RobotMode::kReflex;
@@ -1186,7 +1186,7 @@ TEST(RobotImpl, CanStartConsecutiveMotionAfterError) {
       })
       .spinOnce()
       .waitForCommand<Move>(
-          [=](const Move::Request&) { return Move::Response(Move::Status::kMotionStarted); })
+          [=, this](const Move::Request&) { return Move::Response(Move::Status::kMotionStarted); })
       .spinOnce();
 
   robot.startMotion(Move::ControllerMode::kJointImpedance,

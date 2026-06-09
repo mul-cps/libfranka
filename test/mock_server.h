@@ -168,14 +168,14 @@ MockServer<C>& MockServer<C>::queueResponse(const uint32_t& command_id,
 template <typename C>
 template <typename T>
 MockServer<C>& MockServer<C>::sendEmptyState() {
-  return onSendUDP<T>([=](T& state) { state.message_id = ++sequence_number_; });
+  return onSendUDP<T>([=, this](T& state) { state.message_id = ++sequence_number_; });
 }
 
 template <typename C>
 template <typename T>
 MockServer<C>& MockServer<C>::sendRandomState(std::function<void(T&)> random_generator,
                                               T* sent_state) {
-  return onSendUDP<T>([=](T& state) {
+  return onSendUDP<T>([=, this](T& state) {
     random_generator(state);
     state.message_id = ++sequence_number_;
     if (sent_state != nullptr) {
@@ -188,7 +188,7 @@ template <typename C>
 template <typename T>
 MockServer<C>& MockServer<C>::onSendUDP(std::function<T()> on_send_udp) {
   std::lock_guard<std::timed_mutex> _(command_mutex_);
-  commands_.emplace_back("onSendUDP", [=](Socket&, Socket& udp_socket) {
+  commands_.emplace_back("onSendUDP", [=, this](Socket&, Socket& udp_socket) {
     T state = on_send_udp();
     udp_socket.sendBytes(&state, sizeof(state));
   });
@@ -199,7 +199,7 @@ MockServer<C>& MockServer<C>::onSendUDP(std::function<T()> on_send_udp) {
 template <typename C>
 template <typename T>
 MockServer<C>& MockServer<C>::onSendUDP(std::function<void(T&)> on_send_udp) {
-  return onSendUDP<T>([=]() {
+  return onSendUDP<T>([=, this]() {
     T state{};
     state.message_id = ++sequence_number_;
     if (on_send_udp) {

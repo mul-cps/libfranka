@@ -73,7 +73,7 @@ struct Model : public ::testing::Test {
     }
 
     server
-        .generic([=](decltype(server)::Socket& tcp_socket, decltype(server)::Socket&) {
+        .generic([=, this](decltype(server)::Socket& tcp_socket, decltype(server)::Socket&) {
           CommandHeader header;
           server.receiveRequest<LoadModelLibrary>(tcp_socket, &header);
           server.sendResponse<LoadModelLibrary>(
@@ -137,7 +137,7 @@ TEST_F(Model, CanGetMassMatrix) {
   MockModel mock;
   EXPECT_CALL(mock, M_NE(robot_state.q.data(), robot_state.I_total.data(), robot_state.m_total,
                          robot_state.F_x_Ctotal.data(), _))
-      .WillOnce(WithArgs<4>(Invoke([=](double* output) {
+      .WillOnce(WithArgs<4>(Invoke([=, this](double* output) {
         for (size_t i = 0; i < 49; i++) {
           output[i] = i;
         }
@@ -160,7 +160,7 @@ TEST_F(Model, CanGetCoriolisVector) {
   MockModel mock;
   EXPECT_CALL(mock, c_NE(robot_state.q.data(), robot_state.dq.data(), robot_state.I_total.data(),
                          robot_state.m_total, robot_state.F_x_Ctotal.data(), _))
-      .WillOnce(WithArgs<5>(Invoke([=](double* output) {
+      .WillOnce(WithArgs<5>(Invoke([=, this](double* output) {
         std::copy(expected_vector.cbegin(), expected_vector.cend(), output);
       })));
 
@@ -179,7 +179,7 @@ TEST_F(Model, CanGetGravity) {
   MockModel mock;
   EXPECT_CALL(mock, g_NE(robot_state.q.data(), gravity_earth.data(), robot_state.m_total,
                          robot_state.F_x_Ctotal.data(), _))
-      .WillOnce(WithArgs<4>(Invoke([=](double* output) {
+      .WillOnce(WithArgs<4>(Invoke([=, this](double* output) {
         for (size_t i = 0; i < 7; i++) {
           output[i] = i;
         }
@@ -202,39 +202,39 @@ TEST_F(Model, CanGetJointPoses) {
 
   MockModel mock;
   EXPECT_CALL(mock, O_T_J1(robot_state.q.data(), _))
-      .WillOnce(WithArgs<1>(Invoke([=](double* output) {
+      .WillOnce(WithArgs<1>(Invoke([=, this](double* output) {
         std::copy(expected_pose.cbegin(), expected_pose.cend(), output);
       })));
   EXPECT_CALL(mock, O_T_J2(robot_state.q.data(), _))
-      .WillOnce(WithArgs<1>(Invoke([=](double* output) {
+      .WillOnce(WithArgs<1>(Invoke([=, this](double* output) {
         std::copy(expected_pose.cbegin(), expected_pose.cend(), output);
       })));
   EXPECT_CALL(mock, O_T_J3(robot_state.q.data(), _))
-      .WillOnce(WithArgs<1>(Invoke([=](double* output) {
+      .WillOnce(WithArgs<1>(Invoke([=, this](double* output) {
         std::copy(expected_pose.cbegin(), expected_pose.cend(), output);
       })));
   EXPECT_CALL(mock, O_T_J4(robot_state.q.data(), _))
-      .WillOnce(WithArgs<1>(Invoke([=](double* output) {
+      .WillOnce(WithArgs<1>(Invoke([=, this](double* output) {
         std::copy(expected_pose.cbegin(), expected_pose.cend(), output);
       })));
   EXPECT_CALL(mock, O_T_J5(robot_state.q.data(), _))
-      .WillOnce(WithArgs<1>(Invoke([=](double* output) {
+      .WillOnce(WithArgs<1>(Invoke([=, this](double* output) {
         std::copy(expected_pose.cbegin(), expected_pose.cend(), output);
       })));
   EXPECT_CALL(mock, O_T_J6(robot_state.q.data(), _))
-      .WillOnce(WithArgs<1>(Invoke([=](double* output) {
+      .WillOnce(WithArgs<1>(Invoke([=, this](double* output) {
         std::copy(expected_pose.cbegin(), expected_pose.cend(), output);
       })));
   EXPECT_CALL(mock, O_T_J7(robot_state.q.data(), _))
-      .WillOnce(WithArgs<1>(Invoke([=](double* output) {
+      .WillOnce(WithArgs<1>(Invoke([=, this](double* output) {
         std::copy(expected_pose.cbegin(), expected_pose.cend(), output);
       })));
   EXPECT_CALL(mock, O_T_J8(robot_state.q.data(), _))
-      .WillOnce(WithArgs<1>(Invoke([=](double* output) {
+      .WillOnce(WithArgs<1>(Invoke([=, this](double* output) {
         std::copy(expected_pose.cbegin(), expected_pose.cend(), output);
       })));
   EXPECT_CALL(mock, O_T_J9(robot_state.q.data(), _, _))
-      .WillOnce(WithArgs<1, 2>(Invoke([=](const double* input, double* output) {
+      .WillOnce(WithArgs<1, 2>(Invoke([=, this](const double* input, double* output) {
         std::array<double, 16> expected;
         Eigen::Map<Eigen::Matrix4d>(expected.data(), 4, 4) =
             (Eigen::Matrix4d(robot_state.F_T_EE.data()) *
@@ -245,7 +245,7 @@ TEST_F(Model, CanGetJointPoses) {
         std::copy(expected_pose.cbegin(), expected_pose.cend(), output);
       })));
   EXPECT_CALL(mock, O_T_J9(robot_state.q.data(), robot_state.F_T_EE.data(), _))
-      .WillOnce(WithArgs<2>(Invoke([=](double* output) {
+      .WillOnce(WithArgs<2>(Invoke([=, this](double* output) {
         std::copy(expected_pose.cbegin(), expected_pose.cend(), output);
       })));
 
@@ -268,39 +268,39 @@ TEST_F(Model, CanGetBodyJacobian) {
   }
 
   MockModel mock;
-  EXPECT_CALL(mock, Ji_J_J1(_)).WillOnce(WithArgs<0>(Invoke([=](double* output) {
+  EXPECT_CALL(mock, Ji_J_J1(_)).WillOnce(WithArgs<0>(Invoke([=, this](double* output) {
     std::copy(expected_jacobian.cbegin(), expected_jacobian.cend(), output);
   })));
   EXPECT_CALL(mock, Ji_J_J2(robot_state.q.data(), _))
-      .WillOnce(WithArgs<1>(Invoke([=](double* output) {
+      .WillOnce(WithArgs<1>(Invoke([=, this](double* output) {
         std::copy(expected_jacobian.cbegin(), expected_jacobian.cend(), output);
       })));
   EXPECT_CALL(mock, Ji_J_J3(robot_state.q.data(), _))
-      .WillOnce(WithArgs<1>(Invoke([=](double* output) {
+      .WillOnce(WithArgs<1>(Invoke([=, this](double* output) {
         std::copy(expected_jacobian.cbegin(), expected_jacobian.cend(), output);
       })));
   EXPECT_CALL(mock, Ji_J_J4(robot_state.q.data(), _))
-      .WillOnce(WithArgs<1>(Invoke([=](double* output) {
+      .WillOnce(WithArgs<1>(Invoke([=, this](double* output) {
         std::copy(expected_jacobian.cbegin(), expected_jacobian.cend(), output);
       })));
   EXPECT_CALL(mock, Ji_J_J5(robot_state.q.data(), _))
-      .WillOnce(WithArgs<1>(Invoke([=](double* output) {
+      .WillOnce(WithArgs<1>(Invoke([=, this](double* output) {
         std::copy(expected_jacobian.cbegin(), expected_jacobian.cend(), output);
       })));
   EXPECT_CALL(mock, Ji_J_J6(robot_state.q.data(), _))
-      .WillOnce(WithArgs<1>(Invoke([=](double* output) {
+      .WillOnce(WithArgs<1>(Invoke([=, this](double* output) {
         std::copy(expected_jacobian.cbegin(), expected_jacobian.cend(), output);
       })));
   EXPECT_CALL(mock, Ji_J_J7(robot_state.q.data(), _))
-      .WillOnce(WithArgs<1>(Invoke([=](double* output) {
+      .WillOnce(WithArgs<1>(Invoke([=, this](double* output) {
         std::copy(expected_jacobian.cbegin(), expected_jacobian.cend(), output);
       })));
   EXPECT_CALL(mock, Ji_J_J8(robot_state.q.data(), _))
-      .WillOnce(WithArgs<1>(Invoke([=](double* output) {
+      .WillOnce(WithArgs<1>(Invoke([=, this](double* output) {
         std::copy(expected_jacobian.cbegin(), expected_jacobian.cend(), output);
       })));
   EXPECT_CALL(mock, Ji_J_J9(robot_state.q.data(), _, _))
-      .WillOnce(WithArgs<1, 2>(Invoke([=](const double* input, double* output) {
+      .WillOnce(WithArgs<1, 2>(Invoke([=, this](const double* input, double* output) {
         std::array<double, 16> expected;
         Eigen::Map<Eigen::Matrix4d>(expected.data(), 4, 4) =
             (Eigen::Matrix4d(robot_state.F_T_EE.data()) *
@@ -311,7 +311,7 @@ TEST_F(Model, CanGetBodyJacobian) {
         std::copy(expected_jacobian.cbegin(), expected_jacobian.cend(), output);
       })));
   EXPECT_CALL(mock, Ji_J_J9(robot_state.q.data(), robot_state.F_T_EE.data(), _))
-      .WillOnce(WithArgs<2>(Invoke([=](double* output) {
+      .WillOnce(WithArgs<2>(Invoke([=, this](double* output) {
         std::copy(expected_jacobian.cbegin(), expected_jacobian.cend(), output);
       })));
 
@@ -334,39 +334,39 @@ TEST_F(Model, CanGetZeroJacobian) {
   }
 
   MockModel mock;
-  EXPECT_CALL(mock, O_J_J1(_)).WillOnce(WithArgs<0>(Invoke([=](double* output) {
+  EXPECT_CALL(mock, O_J_J1(_)).WillOnce(WithArgs<0>(Invoke([=, this](double* output) {
     std::copy(expected_jacobian.cbegin(), expected_jacobian.cend(), output);
   })));
   EXPECT_CALL(mock, O_J_J2(robot_state.q.data(), _))
-      .WillOnce(WithArgs<1>(Invoke([=](double* output) {
+      .WillOnce(WithArgs<1>(Invoke([=, this](double* output) {
         std::copy(expected_jacobian.cbegin(), expected_jacobian.cend(), output);
       })));
   EXPECT_CALL(mock, O_J_J3(robot_state.q.data(), _))
-      .WillOnce(WithArgs<1>(Invoke([=](double* output) {
+      .WillOnce(WithArgs<1>(Invoke([=, this](double* output) {
         std::copy(expected_jacobian.cbegin(), expected_jacobian.cend(), output);
       })));
   EXPECT_CALL(mock, O_J_J4(robot_state.q.data(), _))
-      .WillOnce(WithArgs<1>(Invoke([=](double* output) {
+      .WillOnce(WithArgs<1>(Invoke([=, this](double* output) {
         std::copy(expected_jacobian.cbegin(), expected_jacobian.cend(), output);
       })));
   EXPECT_CALL(mock, O_J_J5(robot_state.q.data(), _))
-      .WillOnce(WithArgs<1>(Invoke([=](double* output) {
+      .WillOnce(WithArgs<1>(Invoke([=, this](double* output) {
         std::copy(expected_jacobian.cbegin(), expected_jacobian.cend(), output);
       })));
   EXPECT_CALL(mock, O_J_J6(robot_state.q.data(), _))
-      .WillOnce(WithArgs<1>(Invoke([=](double* output) {
+      .WillOnce(WithArgs<1>(Invoke([=, this](double* output) {
         std::copy(expected_jacobian.cbegin(), expected_jacobian.cend(), output);
       })));
   EXPECT_CALL(mock, O_J_J7(robot_state.q.data(), _))
-      .WillOnce(WithArgs<1>(Invoke([=](double* output) {
+      .WillOnce(WithArgs<1>(Invoke([=, this](double* output) {
         std::copy(expected_jacobian.cbegin(), expected_jacobian.cend(), output);
       })));
   EXPECT_CALL(mock, O_J_J8(robot_state.q.data(), _))
-      .WillOnce(WithArgs<1>(Invoke([=](double* output) {
+      .WillOnce(WithArgs<1>(Invoke([=, this](double* output) {
         std::copy(expected_jacobian.cbegin(), expected_jacobian.cend(), output);
       })));
   EXPECT_CALL(mock, O_J_J9(robot_state.q.data(), _, _))
-      .WillOnce(WithArgs<1, 2>(Invoke([=](const double* input, double* output) {
+      .WillOnce(WithArgs<1, 2>(Invoke([=, this](const double* input, double* output) {
         std::array<double, 16> expected;
         Eigen::Map<Eigen::Matrix4d>(expected.data(), 4, 4) =
             Eigen::Matrix4d(Eigen::Matrix4d(robot_state.F_T_EE.data()) *
@@ -377,7 +377,7 @@ TEST_F(Model, CanGetZeroJacobian) {
         std::copy(expected_jacobian.cbegin(), expected_jacobian.cend(), output);
       })));
   EXPECT_CALL(mock, O_J_J9(robot_state.q.data(), robot_state.F_T_EE.data(), _))
-      .WillOnce(WithArgs<2>(Invoke([=](double* output) {
+      .WillOnce(WithArgs<2>(Invoke([=, this](double* output) {
         std::copy(expected_jacobian.cbegin(), expected_jacobian.cend(), output);
       })));
 
