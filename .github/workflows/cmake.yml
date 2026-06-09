@@ -49,7 +49,7 @@ jobs:
       run: |
         cmake \
           --build $GITHUB_WORKSPACE/build \
-          --config ${{env.BUILD_TYPE}} -j
+          --config ${{env.BUILD_TYPE}} -j $(nproc)
 
     - name: Install
       run: |
